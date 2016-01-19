@@ -2,9 +2,8 @@ module Lib
     ( openSammy
     ) where
 
+import Sound.MIDI.File
 import Sound.MIDI.File.Load
 
-openSammy :: IO ()
-openSammy = do
-        midi <- fromFile "samples/sammy.mid"
-        print midi
+openSammy :: IO T
+openSammy = fromFile "samples/sammy.mid"
