@@ -1,6 +1,10 @@
 module Lib
-    ( someFunc
+    ( openSammy
     ) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+import Sound.MIDI.File.Load
+
+openSammy :: IO ()
+openSammy = do
+        midi <- fromFile "samples/sammy.mid"
+        print midi
