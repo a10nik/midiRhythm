@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import MidiRhythm.Midi
 import Sound.MIDI.File
 import Sound.MIDI.File.Load
 import qualified Data.EventList.Relative.TimeBody as RelEvList
@@ -14,4 +14,4 @@ import Data.Foldable as Foldable
 main :: IO ()
 main = do
   midi <- fromFile "samples/sammy.mid"
-  Foldable.mapM_ (print . getVoiceEvents) (getTracks midi)
+  Foldable.mapM_ (print . toPresses) (getTracks midi)
