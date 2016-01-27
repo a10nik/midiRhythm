@@ -1,6 +1,6 @@
 Here I'll keep the diary of incoming ideas on MIDI-music rhythmic analysis.
 
-##About rhythm MIDI-music
+##About rhythm in MIDI-music
 
 The problem of rhythmic analysis of MIDI-music arises when it is recorded from a real human performance on a
 MIDI-controller (like a digital piano, for instance). Note, that MIDI format itself is capable of expressing the rhythmic
