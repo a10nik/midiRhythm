@@ -12,4 +12,4 @@ real MIDI-instrument recording, there is only information about beginning, endin
 The long-run objective is to accurately detect rhythmic structure of a musical fragment that is to establish measures and determine
 notes and rest values (i.e. 1, 1/2, 1/4, etc.).
 
-The first step is to place bar lines appropriately. Usually that means contents of nearby bars being somewhat similar to each other.
+The first step is to place the bar lines appropriately. Usually that means contents of nearby bars being somewhat similar to each other.
