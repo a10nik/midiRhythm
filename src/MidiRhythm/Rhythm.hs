@@ -38,6 +38,7 @@ newtype Chord = Chord [NotePress] deriving Show
 average :: Chord -> (NotePress, PressCount)
 average (Chord presses) = (avgPress presses, PressCount (NonNeg.fromNumberUnsafe $ length presses))
 
+avgPress :: [NotePress] -> NotePress
 avgPress presses = NotePress (avg getTime) (avg getVelocity) (avg getDuration) (avg getPitch)
   where
     avg select = sum (map select presses) `div` fromIntegral (length presses)
@@ -49,3 +50,17 @@ pressDiff (NotePress _ vel1 dur1 pt1, ct1)
                         (velocityDiff vel1 vel2)
                         (durationDiff dur1 dur2)
                         (pressCountDiff ct1 ct2)
+
+tails :: [t] -> [[t]]
+tails list = list : tails' list []
+  where
+    tails' [] acc = acc
+    tails' (x:xs) acc = tails' xs (xs:acc)
+
+pressesToChunks :: Duration -> [NotePress] -> [[NotePress]]
+pressesToChunks delta presses = map (takeFirst delta) (tails presses)
+  where
+    takeFirst :: Duration -> [NotePress] -> [NotePress]
+    takeFirst _ [] = []
+    takeFirst delta presses =
+      takeWhile (\p -> getTime p < delta + getTime (head presses)) presses
