@@ -20,11 +20,14 @@ determine the values of notes and rests (i.e. 1, 1/2, 1/4, etc).
 ###Bar Line Placement
 
 An obvious path to take is to place bar lines first and then divide the bars into equal parts to form a grid to which
-the notes inside a bar are to be aligned. However, in real music the meter can often be hard to
-determine. For instance, meters multiple of each other like 2/4 and 4/4 differ only with positions of stressed notes and
+the notes inside a bar are to be aligned.
+
+In real music the meter can often be hard to determine.
+For instance, meters multiple of each other like 2/4 and 4/4 differ only with positions of stressed notes and
 therefore are difficult to tell apart considering minor deviations from standards that musicians tend to make.
-Yet, we allow our algorithm to decide such controversial cases as it pleases.
-Let's provide an informal set of rules that bars found by the algorithm should satisfy.
+Of course, in such ambiguous cases we should allow our algorithm to choose either of the possible options.
+
+There are some informal rules that bars partition discovered by the algorithm should satisfy.
 - The bars should be small enough not to include the same rhythmic (time & velocity) pattern several times.
 - The corresponding notes in consecutive bars should be similar to each other in terms of duration, velocity and (usually) pitch.
   In particular, the bars should be big enough to capture the whole recurring pattern (or otherwise there will be a
