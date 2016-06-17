@@ -7,4 +7,6 @@ extra-deps:
 - midi-0.2.2
 - monoid-transformer-0.0.3
 - non-negative-0.1.1
+- GA-1.0
+- random-1.1
 resolver: lts-4.2
