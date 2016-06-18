@@ -16,4 +16,4 @@ import Data.Foldable as Foldable
 main :: IO ()
 main = do
   midi <- fromFile "samples/sammy.mid"
-  Foldable.mapM_ (print . getParallelChunks (ElapsedTime 4) 10 (ElapsedTime 300) . toPresses) (getTracks midi)
+  Foldable.mapM_ (print . getSuperimposedChunks getTime 10 (ElapsedTime 10) (ElapsedTime 15) 16 . toPresses) (getTracks midi)
