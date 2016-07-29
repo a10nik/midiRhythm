@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DeriveGeneric #-}
 module MidiRhythm.NotePress (
     Duration(..),
     Press(..),
@@ -10,6 +10,8 @@ module MidiRhythm.NotePress (
 ) where
 
 import qualified Numeric.NonNegative.Wrapper as NonNeg
+import GHC.Generics
+
 newtype ElapsedTime = ElapsedTime NonNeg.Integer
   deriving (Show, Eq, Ord, Num, Integral, Real, Enum)
 
@@ -27,8 +29,8 @@ newtype PressCount = PressCount NonNeg.Int
 data Press = Press ElapsedTime Velocity Duration deriving (Show, Eq, Ord)
 
 data NotePress = NotePress {
-  getTime :: ElapsedTime,
-  getVelocity :: Velocity,
-  getDuration :: Duration,
-  getPitch :: Pitch
-} deriving (Show, Eq, Ord)
+  notePressTime :: ElapsedTime,
+  notePressVelocity :: Velocity,
+  notePressDuration :: Duration,
+  notePressPitch :: Pitch
+} deriving (Show, Eq, Ord, Generic)

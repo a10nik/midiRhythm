@@ -47,3 +47,23 @@ main = hspec $
           [ ( [1], [4] )
           , ( [2], [6] )
           , ( [3], [8] ) ]
+
+    describe "fitness" $ do
+      let conf = FitnessConfig (ChordDiffCoeffs 1 2 3 4) 5 6
+      it "is 0 for silence in equal bars" $
+        getFitness conf [3, 3, 3, 3] [] `shouldBe` 0
+
+      it "is 0 for equal bars" $
+        getFitness conf [40, 40]
+          [ NotePress 10 100 200 50, NotePress 50 100 200 50] `shouldBe` 0
+
+      it "is non 0 for stretched bars" $
+        getFitness conf [40, 80]
+          [ NotePress 10 100 200 50, NotePress 60 100 200 50] `shouldNotBe` 0
+
+      it "is more when bars are substantially different" $ do
+        let diff1 = getFitness conf [40, 40]
+              [ NotePress 10 100 200 50, NotePress 50 105 200 50]
+            diff2 = getFitness conf [40, 40]
+              [ NotePress 10 100 200 50, NotePress 50 160 200 50]
+        diff1 `shouldSatisfy` (< diff2)

@@ -3,10 +3,12 @@ extra-package-dbs: []
 packages:
 - '.'
 extra-deps:
+- GA-1.0
 - event-list-0.1.1.2
 - midi-0.2.2
 - monoid-transformer-0.0.3
 - non-negative-0.1.1
-- GA-1.0
-- random-1.1
+- text-1.2.2.0
+- threepenny-gui-0.6.0.5
+- websockets-snap-0.9.2.0
 resolver: lts-4.2

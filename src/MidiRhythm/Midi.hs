@@ -68,7 +68,7 @@ pitchAndPressesToNotePresses (pitch, presses) =
 
 toPresses :: MidiFile.Track -> [NotePress]
 toPresses =
-    sortWith getTime
+    sortWith notePressTime
     . foldMap (pitchAndPressesToNotePresses . second (
         noteEventsToPresses
         . map (first ElapsedTime)
