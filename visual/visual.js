@@ -1,11 +1,13 @@
 
+let strokeWidth = 10;
+let pitchOffset = 5;
+let timeFactor = 1/20;
 
 function renderPressesAndBars(presses, bars) {
-	let canvas = document.getElementsByClassName("canvas")[0];
-	let ctx = canvas.getContext("2d");	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	let strokeWidth = 10;
-	let pitchOffset = 5;
-	let timeFactor = 1/20;
+	let canvas = document.getElementsByClassName("presses")[0];
+	let ctx = canvas.getContext("2d");
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
 	let lowestVelocity = Math.min.apply(null, presses.map(p => p.notePressVelocity));
 	let highestVelocity = Math.max.apply(null, presses.map(p => p.notePressVelocity));
 	let lowestPitch = Math.min.apply(null, presses.map(p => p.notePressPitch));
@@ -25,6 +27,21 @@ function renderPressesAndBars(presses, bars) {
 		ctx.fillStyle = "black";
 		ctx.fillRect(timeFactor * (prev + b), 0, 1, canvas.height);
 		prev += b;
+	});
+}
+
+function renderDiffs(hist) {
+	let canvas = document.getElementsByClassName("hist")[0];
+	let ctx = canvas.getContext("2d");
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	let highestWeight = Math.max.apply(null, hist.map(g => g.groupWeight));
+	canvas.width = 1500;
+	canvas.height = 400;
+	let timeFactor = canvas.width / hist[hist.length - 1].groupRightBoundary;
+	hist.forEach(g => {
+		ctx.fillStyle = '#888888';
+		let height = canvas.height * g.groupWeight / highestWeight;
+		ctx.fillRect(timeFactor * g.groupLeftBoundary, canvas.height - height, timeFactor * (g.groupRightBoundary - g.groupLeftBoundary), height);
 	});
 }
 
@@ -80,7 +97,10 @@ document.getElementsByClassName("send")[0].onclick = () => {
 		socket.send(JSON.stringify(recordingState.presses.sort((p1, p2) => p1.notePressTime - p2.notePressTime)));		
 	};
 	socket.onmessage = event => {
-		let attempt = JSON.parse(event.data);
-		renderPressesAndBars(recordingState.presses, attempt.bars);
+		let message = JSON.parse(event.data);
+		if (message.bars)
+			renderPressesAndBars(recordingState.presses, message.bars);
+		if (message.histogram)
+			renderDiffs(message.histogram)
 	};
 }

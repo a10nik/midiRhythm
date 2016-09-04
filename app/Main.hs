@@ -18,6 +18,7 @@ import Sound.MIDI.File.Load as LoadMIDI
 import MidiRhythm.NotePress
 import MidiRhythm.Rhythm
 import MidiRhythm.Search
+import MidiRhythm.Histogram
 import Data.List
 import Data.Ord
 import qualified Numeric.NonNegative.Wrapper as NonNeg
@@ -26,6 +27,7 @@ import Control.Monad.State
 import Data.Aeson
 import qualified Data.ByteString.Lazy.Char8 as BL
 
+instance ToJSON GroupCount
 instance ToJSON NotePress
 instance FromJSON NotePress
 
@@ -55,6 +57,8 @@ application pending = do
     print presses
     let conf = EmConfig (FitnessConfig (ChordDiffCoeffs 2 2 2 1) 10 4) (1 / 3)
     let initStep = notePressTime (last presses) `div` 16
+    let hist = noteHistogram (NoteSimilarityCoeffs 1 0.5 0.5) 6000 256 presses
+    WS.sendTextData conn (encode $ object ["histogram" .= hist])
     let initBars = fixSize presses [initStep]
     _ <- runStateT (replicateM_ 50 (do
       (bars, fitness) <- emStep conf presses

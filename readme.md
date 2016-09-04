@@ -41,3 +41,12 @@ Estimation of the average bar length in a specific segment of a composition does
 of a stated problem. Nevertheless, it can have some useful implications as a starting point in tempo analysis. For example,
 it can act as an additional hint for choosing the basic bar length (TODO example where it would help) as well as serving for
 an a posteriori fitness quality evaluation.
+
+###Bar Lines and Fitness Maximization
+
+Such heuristic tasks as bar placement are commonly solved by expressing solution quality in terms of a fitness function.
+By the latter we mean a real-valued function mapping a solution (which is bar lengths) serving as a given
+solution's goodness criteria. The proposed way to define a simple fitness function in our case is as follows: we slice each bar equally
+into N relatively small time segments with intention to treat each one as a set of simultaneous key presses. Then we calculate difference of the
+corresponding segments in all the pairs of adjacent bars, difference of segments being defined as a weighted Cartesian distance
+between the means of the two press sets, each represented by a vector of mean velocity, pitch and duration.

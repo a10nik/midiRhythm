@@ -19,6 +19,7 @@ library
                      , MidiRhythm.NotePress
                      , MidiRhythm.Rhythm
                      , MidiRhythm.Search
+                     , MidiRhythm.Histogram
   build-depends:       base >= 4.7 && < 5
                      , event-list
                      , midi
