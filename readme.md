@@ -44,9 +44,35 @@ an a posteriori fitness quality evaluation.
 
 ###Bar Lines and Fitness Maximization
 
-Such heuristic tasks as bar placement are commonly solved by expressing solution quality in terms of a fitness function.
-By the latter we mean a real-valued function mapping a solution (which is bar lengths) serving as a given
-solution's goodness criteria. The proposed way to define a simple fitness function in our case is as follows: we slice each bar equally
-into N relatively small time segments with intention to treat each one as a set of simultaneous key presses. Then we calculate difference of the
+Such heuristic tasks as ours can usually be formulated in terms of a fitness function maximization problem.
+That involves divining a real-valued function that given a solution indicates how fitting it is.
+In our case the fitness function is suggested to be defined as follows: we slice each bar equally
+into N relatively small time segments each one to be treated as a set of simultaneous key presses. Then we calculate difference of the
 corresponding segments in all the pairs of adjacent bars, difference of segments being defined as a weighted Cartesian distance
-between the means of the two press sets, each represented by a vector of mean velocity, pitch and duration.
+between the means of the two press sets, each represented by a vector of mean velocity, pitch, and duration.
+To discourage choosing completely different bar lengths we should also subtract a difference between each consecutive bar lengths
+with some coefficient denoting tolerance to tempo changes.
+
+###Maximization
+
+Once the fitness function is defined, the next objective is to find out where its maximum is reached.
+Common calculus methods of maximization such as binsearch or gradient descent usually impose requirements on the function
+like differentiability or convexity that our case most definitely fails to satisfy. The other approach is to give the stochastic
+optimization methods a try. As a rule they trade off the guarantee of solution correctness for the lack of assumptions on the function regularity.
+There is a well-studied family of random-search methods that operate on such conditions. Additionally, in the early 2000-s genetic algorithms have
+rapidly grown on popularity as a solution search method.
+
+###Genetic Approach
+
+If we are to determine the bar lengths without any a-priori information but the key presses themselves, a genetic algorithm is a decent way to go.
+To define a genetic algorithm we should choose the encoding for the solutions to evolve as well as the operations through which they are to be modified:
+the mutation and crossover operations. Intuitively, when two variants of bar placement are to be crossed over, they should produce an offspring that
+before some point in time follows the choice of one parent, and after that those of another. Normally we would have to deal with a tempo irregularity
+at the point of crossover, but instead we can make use of the fact that fitness would not change drastically were we to shift the bar lines half a measure
+back or forth. That's why to perform a crossover we will simply choose the bar lengths from one parent up to some point, and then of another.
+
+As you can see, our definition of crossover largely matches those of standard genetic algorithm. But that should not be the case with mutation. Originally,
+mutation implies there will be significant local changes in the solution and in our case such choice would backfire more often than not. Instead we define
+the mutation like that: after the mutation a randomly chosen segment of music will be cut evenly into a random amount of bars.
+
+TODO: results
