@@ -75,4 +75,16 @@ As you can see, our definition of crossover largely matches those of standard ge
 mutation implies there will be significant local changes in the solution and in our case such choice would backfire more often than not. Instead we define
 the mutation like that: after the mutation a randomly chosen segment of music will be cut evenly into a random amount of bars.
 
-TODO: results
+TODO
+
+###Periodogram as an Initial Estimation
+
+Whatever results are achievable by a genetic approach, it lacks a significant advantage of more crude methods: predictability of their results.
+For instance a sort of enchanced periodogram could prove a useful starting point for somehow less intelligent searching methods like a coordinate descent or
+random search. For reference, by a simple periodogram here we mean the distribution of pairwise time differences between presses.
+The proposed way of enchancing it will largely stem from relying on musical specifics as well as putting some another available non-temporary data to use.
+First thing to note is we may narrow the period search to only include spans shorter than say 10 sec and still match all acceptable bar lengths in music.
+The more serious enchancement is to be that instead of equally influencing the distribution, each pair of presses will contribute to it proportional to
+the similarity the two notes in terms of pitch, duration and velocity. When choosing the coefficients to calculate such similarity one should take into account
+the fact similarity in velocity is much more distinctive for a human ear than those of either pitch or duration. In our research we used the coefficients of
+1, .5 and .5 for velocity, pitch and duration respectively.
