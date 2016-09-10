@@ -1,18 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title></title>
-	<style type="text/css">
-		.presses .diffs {
-			border: 1px solid black;
-		}
-	</style>
+  <title></title>
+  <style type="text/css">
+  .periods,.presses {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .periods rect {
+    fill: steelblue;
+  }
+  </style>
 </head>
 <body>
-	<button class="send">Place bars</button>
-	<canvas class="presses"></canvas>
-	<br/>
-	<canvas class="hist"></canvas>
-	<script src="visual.js"></script>
+  <button class="send">Place bars</button> <br/>
+  <svg class="presses"></svg>
+  <br/>
+  <svg class="periods"></svg>
+  <br/>
+  <svg class="velocity"></svg>
+  <br/>
+  <svg class="pitch"></svg>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="visual.js"></script>
 </body>
 </html>

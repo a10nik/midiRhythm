@@ -36,6 +36,9 @@ toFracJSON x = toJSON (NonNeg.toNumber x)
 
 parseIntegral expected = withScientific expected $ pure . truncate
 
+instance ToJSON (MovingRange Pitch)
+instance ToJSON (MovingRange Velocity)
+
 instance ToJSON Pitch where toJSON = toIntJSON
 instance ToJSON Velocity where toJSON = toIntJSON
 instance ToJSON ElapsedTime where toJSON = toIntJSON
@@ -56,9 +59,16 @@ application pending = do
     let (Just presses) = decode msg :: Maybe [NotePress]
     print presses
     let conf = EmConfig (FitnessConfig (ChordDiffCoeffs 2 2 2 1) 10 4) (1 / 3)
-    let initStep = notePressTime (last presses) `div` 16
     let hist = noteHistogram (NoteSimilarityCoeffs 1 0.5 0.5) 6000 256 presses
-    WS.sendTextData conn (encode $ object ["histogram" .= hist])
+    let (GroupCount l r _) = maximumBy (comparing groupWeight)
+              (filter (\g -> groupLeftBoundary g > 300) hist)
+    let initStep = (l + r) `div` 2
+    let pitchRanges = pitchMovingRange initStep presses
+    let velocityRanges = velocityMovingRange initStep presses
+    WS.sendTextData conn (encode $ object
+      [ "histogram" .= hist
+      , "pitchRanges" .= pitchRanges
+      , "velocityRanges" .= velocityRanges ])
     let initBars = fixSize presses [initStep]
     _ <- runStateT (replicateM_ 50 (do
       (bars, fitness) <- emStep conf presses

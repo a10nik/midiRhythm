@@ -3,8 +3,10 @@ import Test.QuickCheck
 import Control.Exception (evaluate)
 
 import Data.List
+import Data.Maybe
 import MidiRhythm.Rhythm
 import MidiRhythm.NotePress
+import MidiRhythm.Histogram
 
 main :: IO ()
 main = hspec $
@@ -67,3 +69,14 @@ main = hspec $
             diff2 = getFitness conf [40, 40]
               [ NotePress 10 100 200 50, NotePress 50 160 200 50]
         diff1 `shouldSatisfy` (< diff2)
+
+    describe "movingRange" $ do
+      let notes = [NotePress 10 100 300 55, NotePress 50 200 200 50]
+      it "is non-singleton when window is more than distance between notes" $ do
+        let ranges = pitchMovingRange 300 notes
+        let nonSingletonRange = find (\(MovingRange _ l r) -> l < r) ranges
+        nonSingletonRange `shouldSatisfy` isJust
+      it "is singleton when window is less than distance between notes" $ do
+        let ranges = pitchMovingRange 30 notes
+        let nonSingletonRange = find (\(MovingRange _ l r) -> l < r) ranges
+        nonSingletonRange `shouldSatisfy` isNothing

@@ -7,10 +7,11 @@ import Data.List
 import Data.Ord
 import qualified Data.Map.Strict as Map
 import qualified Numeric.NonNegative.Wrapper as NonNeg
-import Numeric.NonNegative.Class
+import Numeric.NonNegative.Class hiding (maximum)
 import Control.Arrow
 import Control.Monad.State
 import GHC.Generics
+import qualified Data.Set as Set
 
 -- movingWindow :: ElapsedTime -> [NotePress] -> [[NotePress]]
 -- movingWindow len presses = scanl'
@@ -48,8 +49,8 @@ noteHistogram (NoteSimilarityCoeffs velC pitC durC) maxBarLen slices presses =
     closeEnoughPresses :: [(NotePress, [NotePress])]
     closeEnoughPresses = presses `zip` map takeUpToMaxBarLength (tails presses)
 
-    distancesWithSignificance :: [(ElapsedTime, NonNeg.Double)]
-    distancesWithSignificance =
+    timeOffsetsWithSignificances :: [(ElapsedTime, NonNeg.Double)]
+    timeOffsetsWithSignificances =
       [ (notePressTime p2 - notePressTime p1, relDist p1 p2 nextPresses)
       | (p1, nextPresses) <- closeEnoughPresses, p2 <- nextPresses ]
 
@@ -67,4 +68,31 @@ noteHistogram (NoteSimilarityCoeffs velC pitC durC) maxBarLen slices presses =
 
     groups :: Map.Map ElapsedTime NonNeg.Double
     groups = Map.fromListWith (+)
-      [(t `div` sliceLen, sgn) | (t, sgn) <- distancesWithSignificance]
+      [(t `div` sliceLen, sgn) | (t, sgn) <- timeOffsetsWithSignificances]
+
+data MovingRange t = MovingRange {
+  movingRangeTime :: ElapsedTime,
+  movingRangeMin :: t,
+  movingRangeMax :: t
+} deriving (Generic, Eq, Show)
+
+movingRange :: Real t => (NotePress -> t) -> ElapsedTime -> [NotePress] -> [MovingRange t]
+movingRange getX window presses =
+    map (\(set, t) -> MovingRange t
+      (set `zeroOr` minimum) (set `zeroOr` maximum)) xSets
+  where
+    zeroOr set f = if Set.null set then 0 else f set
+    xs = map getX presses
+    times = map notePressTime presses
+    onsAndOffs =
+      sortOn (\(_, t, _) -> t)
+      (zip3 xs times (repeat True) ++
+      zip3 xs (map (+ window) times) (repeat False))
+
+    xSets = scanl' addOrRemove (Set.empty, 0) onsAndOffs
+
+    addOrRemove (currXs, _) (x, t, isOn) =
+      ((if isOn then Set.insert else Set.delete) x currXs, t)
+
+pitchMovingRange = movingRange notePressPitch
+velocityMovingRange = movingRange notePressVelocity

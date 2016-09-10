@@ -81,6 +81,8 @@ getSuperimposedChunks getT start firstDur secondDur gran ps =
 getSuperimposedChords = getSuperimposedChunks notePressTime
 sum' :: (Num t) => [t] -> t
 sum' = foldl' (+) 0
+
+average :: (Real a, Fractional b) => [a] -> b
 average xs = realToFrac (sum xs) / genericLength xs
 
 type AvgPress = (NonNeg.Double, NonNeg.Double, NonNeg.Double, NonNeg.Double)
@@ -92,7 +94,7 @@ avgPress presses =  Just ( avg notePressVelocity
                     , avg notePressPitch
                     , NonNeg.fromNumber (genericLength presses))
   where
-    avg getX = average $ map getX presses
+    avg getX = NonNeg.fromNumber ((average $ map getX presses) :: Double)
 
 data ChordDiffCoeffs = ChordDiffCoeffs {
   velocityCoeff :: NonNeg.Double,
@@ -131,7 +133,9 @@ getFitness
       barTimes = zip3 barStarts barLengths nextBarLengths
 
       lenDiff a b = 1 - min a b % max a b
-      avgBarLenDiff = average $ map (\(_, f, s) -> lenDiff f s) barTimes
+      avgBarLenDiff :: NonNeg.Double
+      avgBarLenDiff = realToFrac
+        (average $ map (\(_, f, s) -> lenDiff f s) barTimes)
 
       barNormDiff (start, first, next) =
         sum' $
