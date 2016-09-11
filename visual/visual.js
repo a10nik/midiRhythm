@@ -98,15 +98,15 @@ function renderRanges(ranges, svgClass) {
       .attr("width", width)
       .attr("height", height)
       .attr("transform", "translate(" + sidePadding + ", 0)");
-  mainG.selectAll("line")
-      .data(ranges)
+  var area = d3.area()
+    .x(function(d) { return x(d.movingRangeTime); })
+    .y0(function(d) { return y(d.movingRangeMax); })
+    .y1(function(d) { return y(d.movingRangeMin); });
+  mainG.selectAll("path")
+      .data([ranges])
       .enter()
-      .append("line")
-      .attr("stroke", "black")
-      .attr("x1", function(d) { return x(d.movingRangeTime); })
-      .attr("y1", function(d) { return y(d.movingRangeMin); })
-      .attr("x2", function(d) { return x(d.movingRangeTime); })
-      .attr("y2", function(d) { return y(d.movingRangeMax); });
+      .append("path")
+      .attr("d", area);
   mainG.append("g")
     .attr("transform", "translate(0, " + (height + 5) + ")")
     .call(xAxis);

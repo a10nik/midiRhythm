@@ -73,7 +73,7 @@ application pending = do
     _ <- runStateT (replicateM_ 50 (do
       (bars, fitness) <- emStep conf presses
       state <- get
-      lift $ print state
+      --lift $ print state
       let serialized = encode $ object ["bars" .= bars, "fitness" .= fitness]
       lift $ WS.sendTextData conn serialized
       )) (EmState initBars 0)

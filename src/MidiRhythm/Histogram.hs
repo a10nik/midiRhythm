@@ -72,16 +72,16 @@ noteHistogram (NoteSimilarityCoeffs velC pitC durC) maxBarLen slices presses =
 
 data MovingRange t = MovingRange {
   movingRangeTime :: ElapsedTime,
-  movingRangeMin :: t,
-  movingRangeMax :: t
+  movingRangeMin :: Maybe t,
+  movingRangeMax :: Maybe t
 } deriving (Generic, Eq, Show)
 
 movingRange :: Real t => (NotePress -> t) -> ElapsedTime -> [NotePress] -> [MovingRange t]
 movingRange getX window presses =
     map (\(set, t) -> MovingRange t
-      (set `zeroOr` minimum) (set `zeroOr` maximum)) xSets
+      (set `ifSmth` minimum) (set `ifSmth` maximum)) xSets
   where
-    zeroOr set f = if Set.null set then 0 else f set
+    ifSmth set f = if Set.null set then Nothing else Just (f set)
     xs = map getX presses
     times = map notePressTime presses
     onsAndOffs =
