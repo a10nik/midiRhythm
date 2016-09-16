@@ -71,7 +71,7 @@ before some point in time coheres with one parent, and after that point with ano
 at the point of crossover, but instead we can make use of the fact that fitness would not change drastically were we to shift the bar lines half a measure
 back or forth. That's why to perform a crossover we will simply choose the bar lengths from one parent up to some point, and then of another.
 
-As you can see, our definition of crossover largely matches that of standard genetic algorithm. But that should not be the case with mutation. Originally,
+As one can see, our definition of crossover largely matches that of a standard genetic algorithm. But that should not be the case with mutation. Originally,
 mutation implies there will be significant local changes in the solution and in our case such choice would backfire more often than not. Instead we define
 the mutation like that: after the mutation a randomly chosen segment of music will be cut evenly into a random amount of bars.
 
