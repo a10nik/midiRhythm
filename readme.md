@@ -67,11 +67,11 @@ rapidly grown on popularity as a solution search method.
 If we are to determine the bar lengths without any a-priori information but the key presses themselves, a genetic algorithm is a decent way to go.
 To define a genetic algorithm we should choose the encoding for the solutions to evolve as well as the operations through which they are to be modified:
 the mutation and crossover operations. Intuitively, when two variants of bar placement are to be crossed over, they should produce an offspring that
-before some point in time follows the choice of one parent, and after that those of another. Normally we would have to deal with a tempo irregularity
+before some point in time coheres with one parent, and after that point with another. Normally we would have to deal with a tempo irregularity
 at the point of crossover, but instead we can make use of the fact that fitness would not change drastically were we to shift the bar lines half a measure
 back or forth. That's why to perform a crossover we will simply choose the bar lengths from one parent up to some point, and then of another.
 
-As you can see, our definition of crossover largely matches those of standard genetic algorithm. But that should not be the case with mutation. Originally,
+As you can see, our definition of crossover largely matches that of standard genetic algorithm. But that should not be the case with mutation. Originally,
 mutation implies there will be significant local changes in the solution and in our case such choice would backfire more often than not. Instead we define
 the mutation like that: after the mutation a randomly chosen segment of music will be cut evenly into a random amount of bars.
 
@@ -86,5 +86,5 @@ The proposed way of enchancing it will largely stem from relying on musical spec
 First thing to note is we may narrow the period search to only include spans shorter than say 10 sec and still match all acceptable bar lengths in music.
 The more serious enchancement is to be that instead of equally influencing the distribution, each pair of presses will contribute to it proportional to
 the similarity the two notes in terms of pitch, duration and velocity. When choosing the coefficients to calculate such similarity one should take into account
-the fact similarity in velocity is much more distinctive for a human ear than those of either pitch or duration. In our research we used the coefficients of
+the fact difference in velocity is much more distinctive to a human ear than that in either pitch or duration. In our research we used the coefficients of
 1, .5 and .5 for velocity, pitch and duration respectively.
