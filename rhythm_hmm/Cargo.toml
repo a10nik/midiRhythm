@@ -1,0 +1,9 @@
+[package]
+name = "rhythm_hmm"
+version = "0.1.0"
+authors = ["Artyom Desyatnikov <l0nikov@ya.ru>"]
+
+[dependencies]
+ws = "0.5.3"
+serde = "0.8"
+serde_json = "0.8"
