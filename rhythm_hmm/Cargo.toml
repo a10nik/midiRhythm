@@ -7,3 +7,4 @@ authors = ["Artyom Desyatnikov <l0nikov@ya.ru>"]
 ws = "0.5.3"
 serde = "0.8"
 serde_json = "0.8"
+noisy_float = "0.1.2"
