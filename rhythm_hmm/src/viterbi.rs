@@ -1,6 +1,6 @@
 use std::f32;
 use noisy_float::prelude::*;
-
+use rayon::prelude::*;
 type Obs = usize;
 type State = usize;
 
@@ -32,27 +32,29 @@ fn viterbi_i(obs: &Vec<Obs>,
     let mut v: Vec<Vec<ProbAndPrev>> =
         vec![vec![ProbAndPrev { prob: f32::NEG_INFINITY, prev: None }; states.len()]; obs.len()];
     for st in states.iter() {
-        v[0].insert(*st,
-                    ProbAndPrev {
-                        prob: start_p[*st] + emit_p[*st][obs[0]],
-                        prev: None,
-                    });
+        v[0][*st] = ProbAndPrev {
+            prob: start_p[*st] + emit_p[*st][obs[0]],
+            prev: None,
+        };
     }
     // Run Viterbi when t > 0
     for t in 1..obs.len() {
-        for &st in states {
-            let ref prevs_of_st = prevs[st];
-            let (prev_st, prob) = prevs_of_st.iter()
-                .zip(prevs_of_st.iter()
-                    .map(|&prev_st| v[t - 1][prev_st].prob + trans_p[prev_st][st]))
-                .max_by_key(|&(_, prob)| n32(prob))
-                .unwrap();
-            v[t].insert(st,
-                        ProbAndPrev {
-                            prob: prob + emit_p[st][obs[t]],
-                            prev: Some(*prev_st),
-                        });
-        }
+        // println!("t = {}", t);
+        v[t] = states.par_iter()
+            .map(|&st| {
+                let ref prevs_of_st = prevs[st];
+                // println!("st = {}, prevs = {}", st, prevs_of_st.len());
+                let (prev_st, prob) = prevs_of_st.iter()
+                    .zip(prevs_of_st.iter()
+                        .map(|&prev_st| v[t - 1][prev_st].prob + trans_p[prev_st][st]))
+                    .max_by_key(|&(_, prob)| n32(prob))
+                    .unwrap();
+                ProbAndPrev {
+                    prob: prob + emit_p[st][obs[t]],
+                    prev: Some(*prev_st),
+                }
+            })
+            .collect();
     }
     // The highest probability
     let (best_state, &ProbAndPrev { prob: best_prob, prev: best_prev }) = v.last()

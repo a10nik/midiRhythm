@@ -61,11 +61,11 @@ fn get_emiss_p(prob: &Ioi3Prob, state: &Ioi3, obs: &Ioi3) -> f32 {
     prob.observe(state, obs)
 }
 
-fn get_states() -> Vec<Ioi3> {
+fn get_states(durs: &Vec<u32>) -> Vec<Ioi3> {
     let mut res = vec![];
-    for d1 in 1..9 {
-        for d2 in 1..9 {
-            for d3 in 1..9 {
+    for &d1 in durs.iter() {
+        for &d2 in durs.iter() {
+            for &d3 in durs.iter() {
                 res.push(Ioi3 { iois: [d1, d2, d3] });
             }
         }
@@ -73,12 +73,15 @@ fn get_states() -> Vec<Ioi3> {
     res
 }
 
-pub fn most_probable_times(times: &Vec<u32>, prob: &Ioi3Prob) -> (f32, Vec<u32>) {
+pub fn most_probable_times(times: &Vec<u32>,
+                           possible_durs: &Vec<u32>,
+                           prob: &Ioi3Prob)
+                           -> (f32, Vec<u32>) {
     let obs = to_ioi3s(times);
     let trans_p = |prev: &Ioi3, next: &Ioi3| get_trans_p(prob, prev, next);
     let start_p = |st: &Ioi3| get_emiss_p(prob, st, &obs[0]);
     let emission_p = |state: &Ioi3, obs: &Ioi3| get_emiss_p(prob, state, obs);
-    let states = get_states();
+    let states = get_states(possible_durs);
     let (p, probable_iois) = viterbi::viterbi(&obs, &states, start_p, trans_p, emission_p);
     let mut res_times: Vec<u32> = probable_iois[0].iois.iter().map(|&x| x).collect();
     let rest = probable_iois[1..].iter().map(|ioi3| ioi3.iois[2]);
@@ -93,6 +96,6 @@ pub fn most_probable_times_for_uniform_presses_are_uniform() {
         score_uniformness: 0.1,
     };
     let times: Vec<u32> = vec![5000; 10];
-    let (_, adj_times) = most_probable_times(&times, &prob);
+    let (_, adj_times) = most_probable_times(&times, &((1..8).collect()), &prob);
     assert_eq!(adj_times, vec![adj_times[0]; 10]);
 }
