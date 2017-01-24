@@ -50,7 +50,7 @@ fn joins_overlaps_into_chords() {
 }
 
 fn get_trans_p(prob: &Ioi3Prob, prev: &Ioi3, next: &Ioi3) -> f32 {
-    if prev.iois[1..2] == next.iois[0..1] {
+    if prev.iois[1..3] == next.iois[0..2] {
         prob.transition(prev, next.iois[2])
     } else {
         0.0
@@ -79,9 +79,11 @@ pub fn most_probable_times(times: &Vec<u32>,
                            -> (f32, Vec<u32>) {
     let obs = to_ioi3s(times);
     let trans_p = |prev: &Ioi3, next: &Ioi3| get_trans_p(prob, prev, next);
-    let start_p = |st: &Ioi3| get_emiss_p(prob, st, &obs[0]);
+    let start_p = |_: &Ioi3| 1.0;
     let emission_p = |state: &Ioi3, obs: &Ioi3| get_emiss_p(prob, state, obs);
     let states = get_states(possible_durs);
+
+    //println!("{:?}", states);
     let (p, probable_iois) = viterbi::viterbi(&obs, &states, start_p, trans_p, emission_p);
     let mut res_times: Vec<u32> = probable_iois[0].iois.iter().map(|&x| x).collect();
     let rest = probable_iois[1..].iter().map(|ioi3| ioi3.iois[2]);
@@ -91,10 +93,7 @@ pub fn most_probable_times(times: &Vec<u32>,
 
 #[test]
 pub fn most_probable_times_for_uniform_presses_are_uniform() {
-    let prob = Ioi3Prob {
-        tempo_tolerance: 0.1,
-        score_uniformness: 0.1,
-    };
+    let prob = Ioi3Prob { tempo_tolerance: 0.1 };
     let times: Vec<u32> = vec![5000; 10];
     let (_, adj_times) = most_probable_times(&times, &((1..8).collect()), &prob);
     assert_eq!(adj_times, vec![adj_times[0]; 10]);

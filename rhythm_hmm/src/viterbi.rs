@@ -43,7 +43,6 @@ fn viterbi_i(obs: &Vec<Obs>,
         v[t] = states.par_iter()
             .map(|&st| {
                 let ref prevs_of_st = prevs[st];
-                // println!("st = {}, prevs = {}", st, prevs_of_st.len());
                 let (prev_st, prob) = prevs_of_st.iter()
                     .zip(prevs_of_st.iter()
                         .map(|&prev_st| v[t - 1][prev_st].prob + trans_p[prev_st][st]))
@@ -74,9 +73,8 @@ fn viterbi_i(obs: &Vec<Obs>,
     (best_prob, opt)
 }
 
-fn normalize(vec: Vec<f32>) -> Vec<f32> {
-    let sum: f32 = vec.iter().sum();
-    vec.iter().map(|x| (x / sum).log2()).collect()
+fn logarithmize(vec: Vec<f32>) -> Vec<f32> {
+    vec.iter().map(|x| (x).log2()).collect()
 }
 
 pub fn viterbi<'a, Obs, State, StartP, TransP, EmissionP>(obs: &Vec<Obs>,
@@ -91,12 +89,12 @@ pub fn viterbi<'a, Obs, State, StartP, TransP, EmissionP>(obs: &Vec<Obs>,
 {
     let ref obs_int: Vec<usize> = (0..obs.len()).collect();
     let ref states_int: Vec<usize> = (0..states.len()).collect();
-    let ref start_p_int: Vec<f32> = normalize(states.iter().map(|s| start_p(s)).collect());
+    let ref start_p_int: Vec<f32> = logarithmize(states.iter().map(|s| start_p(s)).collect());
     let ref trans_p_int: Vec<Vec<f32>> = states.iter()
-        .map(|st1| normalize(states.iter().map(|st2| trans_p(st1, st2)).collect()))
+        .map(|st1| logarithmize(states.iter().map(|st2| trans_p(st1, st2)).collect()))
         .collect();
     let ref emission_p_int: Vec<Vec<f32>> = states.iter()
-        .map(|st| normalize(obs.iter().map(|o| emission_p(st, o)).collect()))
+        .map(|st| logarithmize(obs.iter().map(|o| emission_p(st, o)).collect()))
         .collect();
     let (res_p, res_int) = viterbi_i(obs_int,
                                      states_int,
