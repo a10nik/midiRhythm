@@ -99,4 +99,4 @@ Given the observations o, the chance of transition from state s<sub>1</sub> to s
 
     transition_given_the_observations(s_1, s_2, o) = transition(s_1, s_2) * emission(s_2, o_2)
 
-The goal is to find the most probable states (score durations) provided the observations (performed durations). Such type of problems are effectively solved by [Viterbi algorithm](https://en.wikipedia.org/wiki/Viterbi_algorithm).
+The goal is to find the most probable states (score durations) provided the observations (performed durations). Such type of problems has an efficient solution - [the Viterbi algorithm](https://en.wikipedia.org/wiki/Viterbi_algorithm).
