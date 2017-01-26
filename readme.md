@@ -82,9 +82,21 @@ TODO
 Whatever results are achievable by a genetic approach, it lacks a significant advantage of more crude methods: predictability of their results.
 For instance a sort of enchanced periodogram could prove a useful starting point for somehow less intelligent searching methods like a coordinate descent or
 random search. For reference, by a simple periodogram here we mean the distribution of pairwise time differences between presses.
-The proposed way of enchancing it will largely stem from relying on musical specifics as well as putting some another available non-temporary data to use.
-First thing to note is we may narrow the period search to only include spans shorter than say 10 sec and still match all acceptable bar lengths in music.
-The more serious enchancement is to be that instead of equally influencing the distribution, each pair of presses will contribute to it proportional to
-the similarity the two notes in terms of pitch, duration and velocity. When choosing the coefficients to calculate such similarity one should take into account
+The proposed way of enchancing it will largely stem from relying on musical specifics as well as putting some another available non-temporary data to use. It is that instead of equally influencing the distribution, each pair of presses will have its contribution proportional to
+the similarity of the two notes in pitch, duration and velocity. When choosing the coefficients to calculate such similarity one should take into account
 the fact difference in velocity is much more distinctive to a human ear than that in either pitch or duration. In our research we used the coefficients of
 1, .5 and .5 for velocity, pitch and duration respectively.
+
+###Bayessian methods
+
+In 2000-s the University of Tokyo published a series of [http://ismir2003.ismir.net/papers/Takeda.pdf](papers) on MIDI music transcription using hidden Markov models. They make the assumption that a note score duration (as specified in a score) is largely determined by the preceding three score durations. In other words, once you encounter a couple of quarter notes that is much more likely that the next one is also a quarter, than for instance a 7/16. Obviously it is just as well determined by the performed duration of a note, since naturally two consequent notes performed in 108 ms and 386 ms are very unlikely to be a pair of quarters but rather a quarter and a whole or a quarter and a dotted half.
+
+Thus, a Markov model can be formulated as follows: the states are trigrams of distances between notes (or inter-onset intervals, IOIs, according to the Japanese papers) as defined in score, there being k (about 20) possible values for each, k^3 states in total. Observations are the trigrams of performed IOIs. From each state s_i = (A, B, C) there are k reachable states s_j = (B, C, x), and the music of n notes is represented as n-2 transitions between states. Two kinds of probability are considered given (estimated based on samples): the transition probability for all pairs of states and the emission probability - the chance to obtain an observation from a state.
+
+For the sake of illustration: the transition probability between (1/4, 1/4, 1/2) and (1/4, 1/2, *1/4*) defines the likelihood of a *1/4* following the pattern 1/4, 1/4, 1/2. And the emission probability of (103 ms, 86 ms, 169 ms) from state (1/4, 1/8, 3/16) stands for the probability that 1/4, 1/8, 3/16 in score are performed as 103 ms, 86 ms, 169 ms.
+
+Given the observations o, the chance of transition from state s_1 to s_2:
+
+    transition_given_the_observations(s_1, s_2, o) = transition(s_1, s_2) * emission(s_2, o_2)
+
+The problem is to find the most probable states (score durations) provided the observations (performed durations). Such type of problems are effectively solved by [https://en.wikipedia.org/wiki/Viterbi_algorithm](Viterbi algorithm).
