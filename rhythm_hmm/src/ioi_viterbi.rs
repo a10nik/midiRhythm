@@ -4,10 +4,10 @@ use viterbi;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct KeyPress {
-    time: u32,
-    pitch: u8,
-    velocity: u8,
-    duration: u32,
+    pub time: u32,
+    pub pitch: u8,
+    pub velocity: u8,
+    pub duration: u32,
 }
 
 pub fn join_chords(keys: &Vec<KeyPress>, tolerance: u32) -> Vec<(u32, Vec<KeyPress>)> {
@@ -83,7 +83,7 @@ pub fn most_probable_times(times: &Vec<u32>,
     let emission_p = |state: &Ioi3, obs: &Ioi3| get_emiss_p(prob, state, obs);
     let states = get_states(possible_durs);
 
-    //println!("{:?}", states);
+    // println!("{:?}", states);
     let (p, probable_iois) = viterbi::viterbi(&obs, &states, start_p, trans_p, emission_p);
     let mut res_times: Vec<u32> = probable_iois[0].iois.iter().map(|&x| x).collect();
     let rest = probable_iois[1..].iter().map(|ioi3| ioi3.iois[2]);

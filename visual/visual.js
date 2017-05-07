@@ -50,7 +50,7 @@ function renderPressesAndBars(presses, bars) {
     .call(xAxis);
 }
 
-function renderDiffs(hist) {
+function renderBeatSpectrum(hist) {
   var y = d3.scaleLinear()
       .range([height, 0])
       .domain([0, d3.max(hist, function(d) { return d.groupWeight; })]);
@@ -74,39 +74,6 @@ function renderDiffs(hist) {
       .attr("height", function(d) { return height - y(d.groupWeight); })
       .attr("x", function(d) { return x(d.groupLeftBoundary); })
       .attr("width", function(d) { return x(d.groupRightBoundary) - x(d.groupLeftBoundary); });
-  mainG.append("g")
-    .attr("transform", "translate(0, " + (height + 5) + ")")
-    .call(xAxis);
-}
-
-function renderRanges(ranges, svgClass) {
-  var y = d3.scaleLinear()
-      .range([height, 0])
-      .domain([
-        d3.min(ranges, function(r) { return r.movingRangeMin; }),
-        d3.max(ranges, function(r) { return r.movingRangeMax; })
-      ]);
-  var x = d3.scaleLinear()
-      .range([0, width])
-      .domain([0, d3.max(ranges, function(r) { return r.movingRangeTime; })]);
-  var xAxis = d3.axisBottom(x);
-  var chart = d3.select(svgClass)
-      .attr("width", width + sidePadding * 2)
-      .attr("height", height + bottomPadding);
-  chart.selectAll("*").remove();
-  var mainG = chart.append("g")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("transform", "translate(" + sidePadding + ", 0)");
-  var area = d3.area()
-    .x(function(d) { return x(d.movingRangeTime); })
-    .y0(function(d) { return y(d.movingRangeMax); })
-    .y1(function(d) { return y(d.movingRangeMin); });
-  mainG.selectAll("path")
-      .data([ranges])
-      .enter()
-      .append("path")
-      .attr("d", area);
   mainG.append("g")
     .attr("transform", "translate(0, " + (height + 5) + ")")
     .call(xAxis);
@@ -139,45 +106,113 @@ function onNoteOff(time, pitch) {
 function onMidiAccess(midiAccess) {
     console.log("MIDI ready!");
     let input = midiAccess.inputs.get(0);
-  input.onmidimessage = event => {
-    if (event.data.length === 3) {
-      let pitch = event.data[1];
-      let velocity = event.data[2];
-      let time = Math.round(event.timeStamp);
-      if (event.data[0] === 0x90 && velocity > 0)
-        onNoteOn(time, velocity, pitch);
-      else if (event.data[0] === 0x90 && velocity === 0)
-        onNoteOff(time, pitch)
-      else if (event.data[0] === 0x80)
-        onNoteOff(time, pitch)
-    }
-  }
+    input.onmidimessage = event => {
+      if (event.data.length === 3) {
+        let pitch = event.data[1];
+        let velocity = event.data[2];
+        let time = Math.round(event.timeStamp);
+        if (event.data[0] === 0x90 && velocity > 0)
+          onNoteOn(time, velocity, pitch);
+        else if (event.data[0] === 0x90 && velocity === 0)
+          onNoteOff(time, pitch)
+        else if (event.data[0] === 0x80)
+          onNoteOff(time, pitch)
+      }
+    };
 }
 
 navigator.requestMIDIAccess()
   .then(onMidiAccess, () => console.error("omg, no MIDI connected"))
 
-document.getElementsByClassName("send")[0].onclick = () => {
-  var socket = new WebSocket("ws://localhost:9160");
-  socket.onopen = () => {
-    socket.send(JSON.stringify(recordingState.presses.sort((p1, p2) => p1.notePressTime - p2.notePressTime)));
-  };
-  socket.onmessage = event => {
-    let message = JSON.parse(event.data);
-    if (message.bars) {
-      renderPressesAndBars(recordingState.presses, message.bars);
-    }
-    if (message.histogram) {
-      renderDiffs(message.histogram);
-    }
-    if (message.pitchRanges) {
-      renderRanges(message.pitchRanges, ".pitch");
-    }
-    if (message.velocityRanges) {
-      renderRanges(message.velocityRanges, ".velocity");
-    }
-  };
+document.getElementsByClassName("send")[0].addEventListener("click", calculateAndRender);
+
+var maxBeatMs = 5000;
+var spectrumIntervals = 250;
+
+function getBeatSpectrum() {
+  let presses = recordingState.presses;
+  let intervalLength = maxBeatMs / spectrumIntervals;
+  let spectrum = Array(spectrumIntervals).fill().map((_,i) => ({
+    groupLeftBoundary: i * intervalLength,
+    groupRightBoundary: (i + 1) * intervalLength,
+    groupWeight: 0
+  }));
+  let getIntervalNum = x => Math.floor(x / intervalLength);
+  forSpannedPresses((p1, p2) => {
+    let dist = p2.notePressTime - p1.notePressTime;
+    spectrum[getIntervalNum(dist)].groupWeight += 1 / (Math.abs(p2.notePressVelocity - p1.notePressVelocity) || 1);
+  });
+  return spectrum;
 }
 
-renderDiffs([]);
-renderPressesAndBars([], []);
+function forSpannedPresses(action) {
+  let presses = recordingState.presses;
+  for (let i = 0; i < presses.length; i++) {
+    let firstPress = presses[i];
+    for (let j = i; j < presses.length && presses[j].notePressTime - firstPress.notePressTime < maxBeatMs; j++) {
+      action(firstPress, presses[j], i, j);
+    }
+  }
+}
+
+var matrixSize = 1000;
+
+function scalarProd(v1, v2) {
+  let sum = 0;
+  for (let i = 0; i < v1.length; i++) {
+    sum += v1[i] * v2[i];
+  }
+  return sum;
+}
+
+function cos(feat1, feat2) {
+  let prod = scalarProd(feat1, feat2);
+  let feat1Norm = scalarProd(feat1, feat1);
+  let feat2Norm = scalarProd(feat2, feat2);
+  return prod / Math.sqrt(feat1Norm * feat2Norm);
+}
+
+function getSimilarityMatrix() {
+  let maxTime = recordingState.presses[recordingState.presses.length - 1].notePressTime + 1;
+  let interval = maxTime / matrixSize;
+  let matrix = Array(matrixSize).fill().map((_,i) => Array(matrixSize).fill(0));
+  let getInd = x => Math.floor(x / interval);
+  let features = p => (
+    [
+      p.notePressTime,
+      p.notePressVelocity,
+      p.notePressDuration,
+      p.notePressPitch
+    ]
+  );
+  forSpannedPresses((p1, p2) => {
+    matrix[getInd(p1.notePressTime)][getInd(p2.notePressTime)] += Math.abs(cos(features(p1), features(p2)));
+  });
+  return matrix;
+}
+
+function renderSimilarityMatrix(matrix) {
+  let canvas = document.getElementsByClassName("similarity")[0];
+  canvas.height = matrixSize;
+  canvas.width = matrixSize;
+  let context = canvas.getContext("2d");
+  let data = context.getImageData(0, 0, matrixSize, matrixSize);
+  for (let i = 0; i < matrixSize; i++) {
+    for (let j = 0; j < matrixSize; j++) {
+      let weight = matrix[i][j];
+      if (weight) {
+        data.data[((matrixSize - i) * matrixSize + j) * 4 + 3] = 255 - weight * 200;
+      }
+    }
+  }
+  context.putImageData(data, 0, 0);
+}
+
+
+function calculateAndRender() {
+  renderPressesAndBars(recordingState.presses, []);
+  var spectrum = getBeatSpectrum();
+  renderBeatSpectrum(spectrum);
+  var matrix = getSimilarityMatrix();
+  renderSimilarityMatrix(matrix);
+}
