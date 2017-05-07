@@ -25,8 +25,6 @@ function renderPressesAndBars(presses, bars) {
   var color = d3.scaleLinear()
     .range([200, 0])
     .domain(d3.extent(presses, function(p) { return p.notePressVelocity; }));
-  var cumBars = [];
-  bars.reduce(function(a, b, i) { return cumBars[i] = a + b; }, 0);
   mainG.selectAll("rect")
       .data(presses)
       .enter()
@@ -37,7 +35,7 @@ function renderPressesAndBars(presses, bars) {
       .attr("width", function(p) { return x(p.notePressDuration); })
       .attr("fill", function(p) { return d3.rgb(color(p.notePressVelocity), color(p.notePressVelocity), color(p.notePressVelocity)).toString(); });
   mainG.selectAll("line")
-      .data(cumBars)
+      .data(bars)
       .enter()
       .append("line")
       .attr("x1", function(b) { return x(b) })
@@ -209,10 +207,22 @@ function renderSimilarityMatrix(matrix) {
 }
 
 
-function calculateAndRender() {
-  renderPressesAndBars(recordingState.presses, []);
+function calculateAndRender(bars) {
+  renderPressesAndBars(recordingState.presses, bars || []);
   var spectrum = getBeatSpectrum();
   renderBeatSpectrum(spectrum);
   var matrix = getSimilarityMatrix();
   renderSimilarityMatrix(matrix);
+}
+
+document.getElementsByClassName("send")[0].onclick = () => {
+  var socket = new WebSocket("ws://127.0.0.1:3012");
+  socket.onopen = () => {
+    socket.send(JSON.stringify(recordingState.presses.sort((p1, p2) => p1.notePressTime - p2.notePressTime)));
+  };
+  socket.onmessage = event => {
+    let message = JSON.parse(event.data);
+    calculateAndRender(message.chordTimes);
+    debugger;
+  }
 }

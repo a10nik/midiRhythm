@@ -11,10 +11,16 @@ pub struct KeyPress {
 }
 
 pub fn join_chords(keys: &Vec<KeyPress>, tolerance: u32) -> Vec<(u32, Vec<KeyPress>)> {
+    println!("tolerance {}", tolerance);
     let mut chords: Vec<(u32, Vec<KeyPress>)> = vec![];
     let mut i = 0;
     while i < keys.len() {
         let chord_end = keys[i].time + cmp::min(keys[i].duration, tolerance);
+        println!("chord {}. starts: {:?}, ends: {}, next time: {:?}",
+                 chords.len(),
+                 keys[i],
+                 chord_end,
+                 keys.get(i + 1));
         let chord = keys[i..keys.len()]
             .iter()
             .take_while(|k| k.time < chord_end)

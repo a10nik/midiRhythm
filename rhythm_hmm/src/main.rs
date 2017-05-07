@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate serde_json;
 extern crate ws;
 extern crate rhythm_hmm;
@@ -41,7 +42,7 @@ fn main() {
                 .collect::<Vec<_>>();
             // Handle messages received on this connection
             println!("Received {} presses", presses.len());
-            let grouped = ioi_viterbi::join_chords(&presses, 100)
+            let grouped = ioi_viterbi::join_chords(&presses, 150)
                 .iter()
                 .map(|&(t, _)| t)
                 .collect::<Vec<_>>();
@@ -49,10 +50,12 @@ fn main() {
             let prob = Ioi3Prob { tempo_tolerance: 0.1 };
             let possible_durations = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             let (_, res) = ioi_viterbi::most_probable_times(&durs, &possible_durations, &prob);
+            println!("recognized {:?}", res);
             // Use the out channel to send messages back
-            let res_json = serde_json::Value::Array(res.iter()
-                .map(|&t| serde_json::Value::U64(t as u64))
-                .collect());
+            let res_json = json!({
+                "durations": res,
+                "chordTimes": grouped
+            });
             out.send(res_json.to_string())
         }
 
