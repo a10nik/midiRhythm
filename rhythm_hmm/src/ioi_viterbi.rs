@@ -99,7 +99,10 @@ pub fn most_probable_times(times: &Vec<u32>,
 
 #[test]
 pub fn most_probable_times_for_uniform_presses_are_uniform() {
-    let prob = Ioi3Prob { tempo_tolerance: 0.1 };
+    let prob = Ioi3Prob {
+        tempo_tolerance: 0.1,
+        tempo: 6.0,
+    };
     let times: Vec<u32> = vec![5000; 10];
     let (_, adj_times) = most_probable_times(&times, &((1..8).collect()), &prob);
     assert_eq!(adj_times, vec![adj_times[0]; 10]);

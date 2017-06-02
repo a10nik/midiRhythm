@@ -3,7 +3,7 @@ var width = window.innerWidth - 100,
 var sidePadding = 20;
 var bottomPadding = 30;
 
-function renderPressesAndBars(presses, bars) {
+function renderPressesAndBars(presses, bars, durations) {
   var pitchExt = d3.extent(presses, function(p) { return p.notePressPitch; });
   var y = d3.scaleLinear()
       .range([height, 0])
@@ -43,6 +43,17 @@ function renderPressesAndBars(presses, bars) {
       .attr("x2", function(b) { return x(b) })
       .attr("stroke", "black")
       .attr("y2", height);
+  mainG.selectAll("text")
+      .data(bars)
+      .enter()
+      .append("text")
+      .attr("x", function(b) { return x(b) - 10; })
+      .attr("y", height / 2)
+      .text((b, i) => durations[i])
+      .attr("font-family", "sans-serif")
+      .attr("font-size", "10px")
+      .attr("fill", "black");
+  
   mainG.append("g")
     .attr("transform", "translate(0, " + (height + 5) + ")")
     .call(xAxis);
@@ -103,7 +114,7 @@ function onNoteOff(time, pitch) {
 
 function onMidiAccess(midiAccess) {
     console.log("MIDI ready!");
-    let input = midiAccess.inputs.get(0);
+    let input = Array.from(midiAccess.inputs.values())[0];
     input.onmidimessage = event => {
       if (event.data.length === 3) {
         let pitch = event.data[1];
@@ -127,8 +138,7 @@ document.getElementsByClassName("send")[0].addEventListener("click", calculateAn
 var maxBeatMs = 5000;
 var spectrumIntervals = 250;
 
-function getBeatSpectrum() {
-  let presses = recordingState.presses;
+function getBeatSpectrum(presses) {
   let intervalLength = maxBeatMs / spectrumIntervals;
   let spectrum = Array(spectrumIntervals).fill().map((_,i) => ({
     groupLeftBoundary: i * intervalLength,
@@ -136,15 +146,14 @@ function getBeatSpectrum() {
     groupWeight: 0
   }));
   let getIntervalNum = x => Math.floor(x / intervalLength);
-  forSpannedPresses((p1, p2) => {
+  forSpannedPresses(presses, (p1, p2) => {
     let dist = p2.notePressTime - p1.notePressTime;
     spectrum[getIntervalNum(dist)].groupWeight += 1 / (Math.abs(p2.notePressVelocity - p1.notePressVelocity) || 1);
   });
   return spectrum;
 }
 
-function forSpannedPresses(action) {
-  let presses = recordingState.presses;
+function forSpannedPresses(presses, action) {
   for (let i = 0; i < presses.length; i++) {
     let firstPress = presses[i];
     for (let j = i; j < presses.length && presses[j].notePressTime - firstPress.notePressTime < maxBeatMs; j++) {
@@ -170,8 +179,8 @@ function cos(feat1, feat2) {
   return prod / Math.sqrt(feat1Norm * feat2Norm);
 }
 
-function getSimilarityMatrix() {
-  let maxTime = recordingState.presses[recordingState.presses.length - 1].notePressTime + 1;
+function getSimilarityMatrix(presses) {
+  let maxTime = presses[presses.length - 1].notePressTime + 1;
   let interval = maxTime / matrixSize;
   let matrix = Array(matrixSize).fill().map((_,i) => Array(matrixSize).fill(0));
   let getInd = x => Math.floor(x / interval);
@@ -183,7 +192,7 @@ function getSimilarityMatrix() {
       p.notePressPitch
     ]
   );
-  forSpannedPresses((p1, p2) => {
+  forSpannedPresses(presses, (p1, p2) => {
     matrix[getInd(p1.notePressTime)][getInd(p2.notePressTime)] += Math.abs(cos(features(p1), features(p2)));
   });
   return matrix;
@@ -207,22 +216,24 @@ function renderSimilarityMatrix(matrix) {
 }
 
 
-function calculateAndRender(bars) {
-  renderPressesAndBars(recordingState.presses, bars || []);
-  var spectrum = getBeatSpectrum();
+function calculateAndRender() {
+  recordingState.presses.sort((p1, p2) => p1.notePressTime - p2.notePressTime);
+  renderPressesAndBars(recordingState.presses, [],[]);
+  var spectrum = getBeatSpectrum(recordingState.presses);
   renderBeatSpectrum(spectrum);
-  var matrix = getSimilarityMatrix();
+  var matrix = getSimilarityMatrix(recordingState.presses);
   renderSimilarityMatrix(matrix);
 }
 
 document.getElementsByClassName("send")[0].onclick = () => {
+  recordingState.presses.sort((p1, p2) => p1.notePressTime - p2.notePressTime);
   var socket = new WebSocket("ws://127.0.0.1:3012");
   socket.onopen = () => {
-    socket.send(JSON.stringify(recordingState.presses.sort((p1, p2) => p1.notePressTime - p2.notePressTime)));
+    socket.send(JSON.stringify(recordingState.presses));
   };
   socket.onmessage = event => {
     let message = JSON.parse(event.data);
-    calculateAndRender(message.chordTimes);
+    renderPressesAndBars(recordingState.presses, message.chordTimes, message.durations);
     debugger;
   }
 }

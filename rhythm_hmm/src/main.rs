@@ -7,7 +7,10 @@ use rhythm_hmm::ioi::*;
 
 
 fn main2() {
-    let prob = Ioi3Prob { tempo_tolerance: 0.1 };
+    let prob = Ioi3Prob {
+        tempo_tolerance: 0.5,
+        tempo: 78.0,
+    };
     let observed_durations: Vec<u32> = vec![177, 175, 193, 167, 166, 178, 189, 380, 357, 78, 116,
                                             217, 386, 168, 165, 185, 191, 165, 206, 162, 198, 397,
                                             364, 67, 108, 209, 365, 614];
@@ -47,7 +50,10 @@ fn main() {
                 .map(|&(t, _)| t)
                 .collect::<Vec<_>>();
             let durs = (1..grouped.len()).map(|i| grouped[i] - grouped[i - 1]).collect::<Vec<_>>();
-            let prob = Ioi3Prob { tempo_tolerance: 0.1 };
+            let prob = Ioi3Prob {
+                tempo_tolerance: 0.5,
+                tempo: 110.0,
+            };
             let possible_durations = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
             let (_, res) = ioi_viterbi::most_probable_times(&durs, &possible_durations, &prob);
             println!("recognized {:?}", res);

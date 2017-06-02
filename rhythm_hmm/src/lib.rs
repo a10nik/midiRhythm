@@ -1,5 +1,6 @@
 extern crate noisy_float;
 extern crate rayon;
+extern crate statrs;
 
 pub mod ioi;
 pub mod viterbi;
